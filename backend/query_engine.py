@@ -1,56 +1,62 @@
-import pandas as pd
 import re
+import pandas as pd
 
 def simple_english_query(df, query: str):
     query = query.lower().strip()
+    df_filtered = df.copy()
 
-    # 1️⃣ First N rows
-    if "first" in query:
-        nums = re.findall(r"\d+", query)
-        if nums:
-            n = int(nums[0])
-            return df.head(n)
+    # Split multiple conditions by 'and'
+    conditions = [q.strip() for q in re.split(r"\band\b", query)]
 
-    # 2️⃣ Row range
-    if "rows" in query and "to" in query:
-        nums = list(map(int, re.findall(r"\d+", query)))
-        if len(nums) == 2:
-            return df.iloc[nums[0]:nums[1]]
+    for cond in conditions:
+        # 1. first N rows
+        if "first" in cond:
+            n = int(re.findall(r"\d+", cond)[0])
+            df_filtered = df_filtered.head(n)
+            continue
 
-    # 3️⃣ Unique column values
-    if "unique" in query:
+        # 2. Row range
+        if "rows" in cond and "to" in cond:
+            nums = list(map(int, re.findall(r"\d+", cond)))
+            df_filtered = df_filtered.iloc[nums[0]:nums[1]]
+            continue
+
+        # 3. Unique column values
+        if "unique" in cond:
+            for col in df.columns:
+                if col.lower() in cond:
+                    df_filtered = pd.DataFrame(df_filtered[col].unique(), columns=[col])
+            continue
+
+        # 4. Numeric filters
+        m = re.findall(r"(.*)greater than (\d+\.?\d*)", cond)
+        if m:
+            col, val = m[0]
+            col = col.strip()
+            val = float(val)
+            if col in df_filtered.columns:
+                df_filtered = df_filtered[df_filtered[col] > val]
+            continue
+
+        m = re.findall(r"(.*)less than (\d+\.?\d*)", cond)
+        if m:
+            col, val = m[0]
+            col = col.strip()
+            val = float(val)
+            if col in df_filtered.columns:
+                df_filtered = df_filtered[df_filtered[col] < val]
+            continue
+
+        # 5. Column + value match
+        matched = False
         for col in df.columns:
-            if col.lower() in query:
-                return df[col].unique()
+            if col.lower() in cond:
+                val = cond.replace(col.lower(), "").strip()
+                df_filtered = df_filtered[df_filtered[col].astype(str).str.contains(val, case=False)]
+                matched = True
+                break
 
-    # 4️⃣ Numeric filters (greater / less)
-    m = re.findall(r"(.*)greater than ([\d\.]+)", query)
-    if m:
-        col, val = m[0]
-        col = col.strip()
-        val = float(val)
-        return df[df[col] > val]
+        if not matched:
+            return "Query not understood"
 
-    m = re.findall(r"(.*)less than ([\d\.]+)", query)
-    if m:
-        col, val = m[0]
-        col = col.strip()
-        val = float(val)
-        return df[df[col] < val]
-
-    # 5️⃣ Column + value match (string / numeric)
-    for col in df.columns:
-        if col.lower() in query:
-            val_str = query.replace(col.lower(), "").strip()
-            # check if column is numeric
-            if pd.api.types.is_numeric_dtype(df[col]):
-                try:
-                    val_num = float(val_str)
-                    return df[df[col] == val_num]
-                except:
-                    return f"Could not convert '{val_str}' to numeric for column '{col}'"
-            else:
-                # object / string column
-                return df[df[col].astype(str).str.contains(val_str, case=False)]
-
-    return "Query not understood"
+    return df_filtered
