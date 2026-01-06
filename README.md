@@ -1,6 +1,6 @@
 > 🚀 A Power BI–like data analytics app built using pure Python — no SQL, no paid APIs.
 
-📊 AI Data Analytics App (No-Code / Low-Code)
+# 📊 AI Data Analytics App (No-Code / Low-Code)
 An interactive AI-powered data analytics web app built using Streamlit & Python.
 Upload your dataset and instantly get insights, filters, charts, and English-based queries — without writing SQL or complex code.
 
@@ -115,6 +115,26 @@ PDF report generation
 Advanced NLP-based queries
 
 Authentication & user dashboards
+
+# 🌐 Live Demo
+
+Try the app live here:
+[AI Data Analytics App
+](https://ai-data-analytics-app.streamlit.app/) ✅
+
+Upload your dataset (CSV, Excel, or JSON) and instantly get:
+
+Data preview & summary
+
+Numeric & categorical insights
+
+Smart filters (numeric & categorical)
+
+Auto-generated charts (bar, line, pie, histogram)
+
+English-based queries — no coding required
+
+Experience a Power BI–like analytics app entirely in Python!
 
 👨‍💻 Author
 Ayush Tiwari
